@@ -20,40 +20,122 @@
 </head>
 <body>
     <div id="header" style="background: #333; color: white; padding: 20px; text-align: center;">
-        <h1>Physics Class 11 - Learning Portal "Motion"</h1></div>
+        <h1>Physics Class 11 - Learning Portal "Motion"</h1>
+        <div style="margin-top: 10px;">
+          <label for="dataSource" style="font-size: 14px; margin-right: 8px;">Data Source:</label>
+          <select id="dataSource" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;">
+            <option value="json">Local JSON</option>
+            <option value="sheets">Google Sheets</option>
+          </select>
+        </div>
+    </div>
   <div id="topics-container" style="padding: 30px;"></div>
 
   <script>
   const container = document.getElementById("topics-container");
+  const dataSourceSelect = document.getElementById("dataSource");
+  const MY_SHEET_ID = '17gFKRFliEKwgs8AD6C_mLPl32DCqoXLvqYQ7-Bcywdo';
 
-  fetch('data.json')
-    .then(response => response.json())
-    .then(data => {
-      data.forEach(topic => {
-        let notesHTML = "";
-        topic.notes.forEach(note => {
-          notesHTML += `<p>• ${note}</p>`;
+  const topicsRegistry = [
+    { sheet: "Sheet1", range: "A1:A10" },
+    { sheet: "Sheet2", range: "A1:A12" },
+    { sheet: "Sheet3", range: "A1:A12" }, // Added Sheet3
+    { sheet: "Sheet5", range: "A1:A15" },
+    { sheet: "Sheet6", range: "A1:A18" },
+    { sheet: "Sheet7", range: "A1:A15" }, // Added Sheet7
+    { sheet: "Sheet8", range: "A1:A20" }
+  ];
+
+  function loadData() {
+    container.innerHTML = ""; // Clear existing cards
+    const source = dataSourceSelect.value;
+
+    if (source === 'json') {
+      fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+          data.forEach(topic => {
+            let notesHTML = "";
+            topic.notes.forEach(note => {
+              notesHTML += `<p>• ${note}</p>`;
+            });
+
+            const cardHTML = `
+              <div class="topic-card" id="${topic.id}" data-sim-id="${topic.simId}">
+                <h2 class="title">${topic.title}</h2>
+                <div class="notes-area">${notesHTML}</div>
+                <button class="sim-btn" onclick="activateSim('${topic.id}')">Launch Simulator</button>
+                <div class="sim-placeholder"></div>
+              </div>
+            `;
+            container.innerHTML += cardHTML;
+          });
+
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise();
+          }
+        })
+        .catch(error => {
+          console.error('Error loading data:', error);
+          container.innerHTML = '<p>⚠️ Error loading lesson data.</p>';
         });
-
-        const cardHTML = `
-          <div class="topic-card" id="${topic.id}" data-sim-id="${topic.simId}">
-            <h2 class="title">${topic.title}</h2>
-            <div class="notes-area">${notesHTML}</div>
-            <button class="sim-btn" onclick="activateSim('${topic.id}')">Launch Simulator</button>
+    } else if (source === 'sheets') {
+      topicsRegistry.forEach(t => {
+        container.innerHTML += `
+          <div class="topic-card" id="${t.sheet}" data-sheet="${t.sheet}" data-range="${t.range}" data-sim-id="${t.sheet}">
+            <h2 class="title">Loading...</h2>
+            <div class="notes-area">Loading notes...</div>
+            <button class="sim-btn" onclick="activateSim('${t.sheet}')">Launch Simulator</button>
             <div class="sim-placeholder"></div>
           </div>
         `;
-        container.innerHTML += cardHTML;
       });
 
-      if (window.MathJax && window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise();
-      }
-    })
-    .catch(error => {
-      console.error('Error loading data:', error);
-      container.innerHTML = '<p>⚠️ Error loading lesson data.</p>';
-    });
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const el = entry.target;
+            const sheet = el.getAttribute('data-sheet');
+            const range = el.getAttribute('data-range');
+            const url = `https://docs.google.com/spreadsheets/d/${MY_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheet}&range=${range}`;
+
+            fetch(url)
+              .then(res => res.text())
+              .then(data => {
+                const jsonStr = data.replace(/^[\s\S]*setResponse\(/, '').replace(/\);[\s\S]*$/, '');
+                const json = JSON.parse(jsonStr);
+                const rows = json.table.rows;
+
+                el.querySelector('.title').innerText = rows[0]?.c[0]?.v || sheet;
+
+                let notes = "";
+                for (let i = 1; i < rows.length; i++) {
+                  if (rows[i].c[0]) notes += `<p>• ${rows[i].c[0].v}</p>`;
+                }
+                const notesArea = el.querySelector('.notes-area');
+                notesArea.innerHTML = notes || "No notes available.";
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                  window.MathJax.typesetPromise([notesArea]);
+                }
+              })
+              .catch(err => {
+                console.error(err);
+                el.querySelector('.notes-area').innerHTML = "⚠️ Error loading notes.";
+              });
+
+            observer.unobserve(el);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.topic-card').forEach(card => observer.observe(card));
+    }
+  }
+
+  dataSourceSelect.addEventListener('change', loadData);
+
+  // Initial load
+  loadData();
   </script>
   <div id="footer" style="padding: 20px; text-align: center; background: #333; color: white;">© 2025 Physics Class 11 Learning Portal</div>
 </body>
