@@ -39,8 +39,22 @@ function activateSim(id) {
       break;
 
     case "Sheet3":
-      placeholder.innerHTML = `<canvas id="sheet3Canvas" width="${canvasWidth}" height="${canvasHeight}" style="border:1px solid #ccc; border-radius:8px; background:#fafafa;"></canvas>`;
-      runSheet3Sim();
+      console.log("👉 Entered Sheet3 case");
+      placeholder.innerHTML = `
+        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+          <div style="margin-top:10px; text-align:center;">
+            <button id="openSheet3Btn" style="padding: 8px 16px; font-size:14px; cursor:pointer;">
+              Open x_y_z_axis.html
+            </button>
+          </div>
+        </div>`;
+
+      const btn3 = document.getElementById("openSheet3Btn");
+      if (btn3) {
+        btn3.onclick = () => {
+          window.open("x_y_z_axis.html", "_blank");
+        };
+      }
       break;
 
     case "Sheet6":
@@ -87,29 +101,9 @@ function activateSim(id) {
       resetPosDisp('posDispCanvas');
       break;
       case "Sheet7":
-  console.log("👉 Entered Sheet7 case"); // debug trace
-
-  placeholder.innerHTML = `
-    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
-      <canvas id="sheet7Canvas" width="${canvasWidth}" height="${canvasHeight}" style="background:#fff;"></canvas>
-      <div style="margin-top:10px; text-align:center;">
-        <button id="openSheet7Btn" style="padding: 8px 16px; font-size:14px; cursor:pointer;">
-          Open xyz4.html
-        </button>
-      </div>
-    </div>`;
-
-  const btn7 = document.getElementById("openSheet7Btn");
-  if (btn7) {
-    console.log("✅ Button element found for Sheet7");
-    btn7.onclick = () => {
-      console.log("🎯 Button clicked, opening xyz4.html...");
-      window.open("xyz4.html", "_blank");
-    };
-  } else {
-    console.error("❌ Button element NOT found for Sheet7");
-  }
-  break;
+      console.log("👉 Entered Sheet7 case");
+      placeholder.innerHTML = `<p style="color: #666; font-style: italic; padding: 10px; text-align: center;">Simulator coming soon.</p>`;
+      break;
 
     case "Sheet8":
       console.log("👉 Entered Sheet8 case");
